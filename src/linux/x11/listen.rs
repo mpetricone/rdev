@@ -56,7 +56,7 @@ where
         xlib::XSync(dpy_control, FALSE);
         // Run
         let result =
-            xrecord::XRecordEnableContext(dpy_control, context, Some(record_callback), &mut 0);
+            xrecord::XRecordEnableContextAsync(dpy_control, context, Some(record_callback), &mut 0);
         if result == 0 {
             return Err(ListenError::RecordContextEnablingError);
         }
