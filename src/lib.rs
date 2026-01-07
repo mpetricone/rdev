@@ -235,7 +235,10 @@ mod linux;
 #[cfg(all(target_family = "unix", not(target_os = "macos")))]
 pub use crate::linux::Keyboard;
 #[cfg(all(target_family = "unix", not(target_os = "macos")))]
-use crate::linux::{display_size as _display_size, listen as _listen, simulate as _simulate};
+use crate::linux::{
+    display_size as _display_size, listen as _listen, simulate as _simulate,
+    stop_listening as _stop_listening,
+};
 
 #[cfg(target_os = "windows")]
 mod windows;
@@ -270,6 +273,10 @@ where
     T: FnMut(Event) + 'static,
 {
     _listen(callback)
+}
+
+pub fn stop_listening() {
+    _stop_listening();
 }
 
 /// Sending some events

@@ -15,4 +15,5 @@ pub use display::display_size;
 pub use grab::grab;
 pub use keyboard::Keyboard;
 pub use listen::listen;
+pub use listen::stop_listening;
 pub use simulate::simulate;

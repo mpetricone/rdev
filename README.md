@@ -12,6 +12,10 @@ crate which helped me write this one.
 
 This crate is so far a pet project for me to understand the Rust ecosystem.
 
+# Note from Matt
+
+I have no intention of updating the wayland or Windows funtionality at this time.
+
 ## Listening to global events
 
 ```rust

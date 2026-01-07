@@ -1,13 +1,13 @@
 [package]
 name = "rdev"
 version = "0.6.0"
-authors = ["Nicolas Patry <patry.nicolas@protonmail.com>"]
+authors = ["Nicolas Patry <patry.nicolas@protonmail.com>", "Matthew Petricone <strstream@gmail.com>"]
 edition = "2024"
 
 description = "Listen and send keyboard and mouse events on Windows, Linux and MacOS."
 documentation = "https://docs.rs/rdev/"
-homepage = "https://github.com/Narsil/rdev"
-repository = "https://github.com/Narsil/rdev"
+homepage = "https://github.com/mpetricone/rdev"
+repository = "https://github.com/mpetricone/rdev"
 readme = "README.md"
 keywords = ["input", "mouse", "testing", "keyboard", "automation"]
 categories = ["development-tools::testing", "api-bindings", "hardware-support"]

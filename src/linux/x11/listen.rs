@@ -3,14 +3,23 @@ extern crate x11;
 use super::common::{FALSE, KEYBOARD, convert};
 use super::keyboard::Keyboard;
 use crate::rdev::{Event, ListenError};
+use libc::c_void;
 use std::convert::TryInto;
 use std::os::raw::{c_char, c_int, c_uchar, c_uint, c_ulong};
 use std::ptr::null;
 use x11::xlib;
 use x11::xrecord;
+use x11::xrecord::XRecordContext;
+use x11::xrecord::XRecordDisableContext;
 
+//I would love to get rid of these globals, but some of them are vexxing me - matt.
+//I think these globals should be protected by a mutex - there is threading happening
+//TODO find a way to remove the globals
 static mut RECORD_ALL_CLIENTS: c_ulong = xrecord::XRecordAllClients;
 static mut GLOBAL_CALLBACK: Option<Box<dyn FnMut(Event)>> = None;
+static mut GLOBAL_RECORD_CONTEXT: Option<XRecordContext> = None;
+// This feels dirty, but i didn't want to re-factor to get rid of a few globals
+static mut GLOBAL_DISPLAY: Option<*mut xlib::Display> = None;
 
 pub fn listen<T>(callback: T) -> Result<(), ListenError>
 where
@@ -26,11 +35,11 @@ where
         if dpy_control.is_null() {
             return Err(ListenError::MissingDisplayError);
         }
-        let extension_name = c"RECORD";
-        let extension = xlib::XInitExtension(dpy_control, extension_name.as_ptr());
-        if extension.is_null() {
-            return Err(ListenError::XRecordExtensionError);
-        }
+        //let extension_name = c"RECORD";
+        //let extension = xlib::XInitExtension(dpy_control, extension_name.as_ptr());
+        //if extension.is_null() {
+        //    return Err(ListenError::XRecordExtensionError);
+        // }
 
         // Prepare record range
         let mut record_range: xrecord::XRecordRange = *xrecord::XRecordAllocRange();
@@ -52,16 +61,36 @@ where
         if context == 0 {
             return Err(ListenError::RecordContextError);
         }
+        GLOBAL_RECORD_CONTEXT = Some(context);
+        GLOBAL_DISPLAY = Some(dpy_control);
 
         xlib::XSync(dpy_control, FALSE);
         // Run
-        let result =
-            xrecord::XRecordEnableContextAsync(dpy_control, context, Some(record_callback), &mut 0);
+        let result = xrecord::XRecordEnableContext(
+            GLOBAL_DISPLAY.unwrap(),
+            GLOBAL_RECORD_CONTEXT.unwrap(),
+            Some(record_callback),
+            &mut 0,
+        );
+        // Free the record_range
+        xlib::XFree(&mut record_range as *mut _ as *mut c_void);
         if result == 0 {
             return Err(ListenError::RecordContextEnablingError);
         }
     }
     Ok(())
+}
+
+/// Stops the listen() blocking action
+/// It is taking a few seconds to return control on an i7
+pub fn stop_listening() {
+    unsafe {
+        if let Some(c) = GLOBAL_RECORD_CONTEXT {
+            if XRecordDisableContext(GLOBAL_DISPLAY.unwrap(), c) != 0 {
+                GLOBAL_RECORD_CONTEXT = None;
+            }
+        }
+    }
 }
 
 // No idea how to do that properly relevant doc lives here:
